@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Text;
 
 namespace AsyncService.Services
 {
@@ -8,7 +9,12 @@ namespace AsyncService.Services
         {
             var client = new WebClient();
 
-            return client.DownloadString("http://www.laterooms.com");
+            var contents = new StringBuilder();
+            contents.Append(client.DownloadString("http://www.laterooms.com"));
+            contents.Append(client.DownloadString("http://www.laterooms.com"));
+            contents.Append(client.DownloadString("http://www.laterooms.com"));
+
+            return contents.ToString();
         }
     }
 }
