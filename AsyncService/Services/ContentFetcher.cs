@@ -1,6 +1,4 @@
-﻿using System.Net;
-using System.Net.Http;
-using System.Text;
+﻿using System.Collections.Concurrent;
 using System.Threading.Tasks;
 
 namespace AsyncService.Services
@@ -9,14 +7,13 @@ namespace AsyncService.Services
     {
         public async Task<string> GetAllTheContents()
         {
-            var client = new HttpClient();
+            var contents = new ConcurrentBag<string>();
 
-            var contents = new StringBuilder();
-            contents.Append(await client.GetStringAsync("http://www.laterooms.com"));
-            contents.Append(await client.GetStringAsync("http://www.laterooms.com"));
-            contents.Append(await client.GetStringAsync("http://www.laterooms.com"));
+            await Task.Delay(5000).ContinueWith(_ => contents.Add("FINISHED 1..."));
+            await Task.Delay(5000).ContinueWith(_ => contents.Add("FINISHED 2..."));
+            await Task.Delay(5000).ContinueWith(_ => contents.Add("FINISHED 3..."));
 
-            return contents.ToString();
+            return string.Concat(contents);
         }
     }
 }
