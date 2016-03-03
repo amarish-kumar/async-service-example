@@ -1,14 +1,15 @@
 ﻿using System.Net;
+using System.Threading.Tasks;
 
 namespace AsyncService.Services
 {
     public class ContentFetcher
     {
-        public string GetAllTheContents()
+        public async Task<string> GetAllTheContentsAsync()
         {
             var client = new WebClient();
 
-            return client.DownloadString("http://www.laterooms.com");
+            return await client.DownloadStringTaskAsync("http://www.laterooms.com");
         }
     }
 }
