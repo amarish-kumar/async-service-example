@@ -20,9 +20,9 @@ namespace AsyncService.Services
             var contents = new ConcurrentBag<string>();
             var work = new List<Task>
             {
-                Task.Delay(5000).ContinueWith(_ => contents.Add("FINISHED 1...")),
-                Task.Delay(5000).ContinueWith(_ => contents.Add("FINISHED 2...")),
-                Task.Delay(5000).ContinueWith(_ => contents.Add("FINISHED 3..."))
+                Task.Delay(1000).ContinueWith(_ => contents.Add("FINISHED 1...")),
+                Task.Delay(1000).ContinueWith(_ => contents.Add("FINISHED 2...")),
+                Task.Delay(1000).ContinueWith(_ => contents.Add("FINISHED 3..."))
             };
 
             await Task.WhenAll(work);
