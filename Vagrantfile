@@ -74,9 +74,11 @@ Vagrant.configure(2) do |config|
     sudo apt-get update
     sudo apt-get install -y siege httperf apache2-utils
     echo "10.0.2.2 #{host}" | sudo tee -a /etc/hosts
-    echo "siege -c ${1:-#{concurrency}} -t ${2:-30s} #{target}" > #{scripts}siege
-    echo "ab -n ${1:-1000} -c #{concurrency} #{target}"  > #{scripts}ab
-    echo "httperf --server=#{host} --uri=#{uri} --num-conns=${1:-5000} --rate=${2:-#{concurrency}}" > #{scripts}httperf
+    # note the double-escapes here: one for ruby, one for bash
+    # yeah, working that out was fun...
+    echo "siege -c \\${1:-#{concurrency}} -t \\${2:-30s} #{target}" > #{scripts}siege
+    echo "ab -c \\${1:-#{concurrency}} -n \\${2:-1000} #{target}"  > #{scripts}ab
+    echo "httperf --server=#{host} --uri=#{uri} --rate=\\${1:-#{concurrency}}" --num-conns=\\${2:-5000} > #{scripts}httperf
     chown vagrant:vagrant #{scripts}*
     chmod u+x #{scripts}*
   SHELL
