@@ -64,11 +64,20 @@ Vagrant.configure(2) do |config|
   # Enable provisioning with a shell script. Additional provisioners such as
   # Puppet, Chef, Ansible, Salt, and Docker are also available. Please see the
   # documentation for more information about their specific syntax and use.
+  
+  host = "asyncservice"
+  uri = "/api/content"
+  target = host + uri
+  scripts = "/home/vagrant/attack-"
+  concurrency = 100
   config.vm.provision "shell", inline: <<-SHELL
     sudo apt-get update
-    sudo apt-get install -y siege
-    echo "10.0.2.2 asyncservice" | sudo tee -a /etc/hosts
-    echo "siege -c 20 -t 1m asyncservice/api/content" > /vagrant/attack
-    chmod o+x /vagrant/attack
+    sudo apt-get install -y siege httperf apache2-utils
+    echo "10.0.2.2 #{host}" | sudo tee -a /etc/hosts
+    echo "siege -c ${1:-#{concurrency}} -t ${2:-30s} #{target}" > #{scripts}siege
+    echo "ab -n ${1:-1000} -c #{concurrency} #{target}"  > #{scripts}ab
+    echo "httperf --server=#{host} --uri=#{uri} --num-conns=${1:-5000} --rate=${2:-#{concurrency}}" > #{scripts}httperf
+    chown vagrant:vagrant #{scripts}*
+    chmod u+x #{scripts}*
   SHELL
 end
