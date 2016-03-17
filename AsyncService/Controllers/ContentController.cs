@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 using System.Web.Http;
-
+using AsyncService.Middleware;
 using AsyncService.Services;
 
 namespace AsyncService.Controllers
@@ -9,9 +9,9 @@ namespace AsyncService.Controllers
     {
         public async Task<string> Get()
         {
-            var fetcher = new ContentFetcher();
+            var middleware = new AsyncNotNeededHere();
 
-            return await fetcher.GetAllTheContents();
+            return await middleware.GetContent();
         }
     }
 }
