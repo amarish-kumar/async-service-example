@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 
 namespace AsyncService.Services
@@ -13,22 +14,26 @@ namespace AsyncService.Services
         {
             const string connectionString = "my connection string";
 
-            var forceSynchronousSerialOptions = new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = 1 };
+            var asyncParallelOptions = new ExecutionDataflowBlockOptions
+            {
+                BoundedCapacity = 1000,
+                MaxDegreeOfParallelism = 200
+            };
             var readRecords = new 
-                TransformManyBlock<string, string>((Func<string, IEnumerable<string>>)ReadRecords, forceSynchronousSerialOptions);
+                TransformManyBlock<string, string>((Func<string, Task<IEnumerable<string>>>)ReadRecords, asyncParallelOptions);
 
             var parseRecords = new
-                TransformBlock<string, string>((Func<string, string>)ParseRecords, forceSynchronousSerialOptions);
+                TransformBlock<string, string>((Func<string, string>)ParseRecords, asyncParallelOptions);
 
             var callApi = new
-                TransformBlock<string, string>((Func<string, string>)CallApi, forceSynchronousSerialOptions);
+                TransformBlock<string, string>((Func<string, Task<string>>)CallApi, asyncParallelOptions);
 
             var content = new StringBuilder();
             var writeRecords = new
-                ActionBlock<string>((record) => {                    
-                    WriteRecords(record);
+                ActionBlock<string>(async (record) => {                    
+                    await WriteRecords(record);
                     content.AppendLine(record);
-                }, forceSynchronousSerialOptions);
+                }, asyncParallelOptions);
 
             readRecords.LinkTo(parseRecords);
             parseRecords.LinkTo(callApi);
@@ -38,7 +43,7 @@ namespace AsyncService.Services
             parseRecords.Completion.ContinueWith(t => callApi.Complete());
             callApi.Completion.ContinueWith(t => writeRecords.Complete());
 
-            readRecords.Post(connectionString);
+            readRecords.SendAsync(connectionString);
 
             readRecords.Complete();
 
@@ -47,14 +52,14 @@ namespace AsyncService.Services
             return content.ToString();
         }
 
-        private void WriteRecords(string record)
+        private async Task WriteRecords(string record)
         {
-            Thread.Sleep(50);
+            await Task.Delay(50);
         }
 
-        private string CallApi(string item)
+        private async Task<string> CallApi(string item)
         {
-            Thread.Sleep(5000);
+            await Task.Delay(5000);
 
             return $"x:{item}";
         }
@@ -66,9 +71,9 @@ namespace AsyncService.Services
             return $"A-{record}";
         }
 
-        private IEnumerable<string> ReadRecords(string input)
+        private async Task<IEnumerable<string>> ReadRecords(string input)
         {
-            Thread.Sleep(2000);
+            await Task.Delay(2000);
 
             return Enumerable
                     .Range(0, 100)
